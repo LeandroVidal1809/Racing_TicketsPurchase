@@ -1,0 +1,31 @@
+# ── SECRETS ───────────────────────────────────────────────────────────────────
+appsettings.json
+appsettings.*.json
+*.env
+.env
+.env.*
+secrets.json
+
+# ── .NET BUILD ────────────────────────────────────────────────────────────────
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# ── FRONTEND OUTPUT ───────────────────────────────────────────────────────────
+frontend-output/node_modules/
+frontend-output/dist/
+frontend-output/.angular/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+

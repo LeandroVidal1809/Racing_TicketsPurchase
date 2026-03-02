@@ -1,0 +1,38 @@
+<header class="header">
+  <div class="container header__inner">
+
+    <a routerLink="/" class="header__logo" (click)="closeMenu()">
+      <span class="header__logo-text">Racing</span>
+      <span class="header__logo-sub">Tickets</span>
+    </a>
+
+    <nav class="header__nav" [class.header__nav--open]="menuOpen">
+      <a routerLink="/"          routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="closeMenu()">Inicio</a>
+      <a routerLink="/partidos"  routerLinkActive="active" (click)="closeMenu()">Partidos</a>
+      <a routerLink="/mi-cuenta" routerLinkActive="active" (click)="closeMenu()">Mi Cuenta</a>
+    </nav>
+
+    <a routerLink="/partidos" class="btn btn--primary header__cta">
+      Comprar Entradas
+    </a>
+
+    <button class="header__burger" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+
+  </div>
+</header>
+
+<main class="main-content">
+  <router-outlet />
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="footer__brand">
+      <span class="footer__brand-text">Racing Club</span>
+      <span class="footer__brand-sub">de Avellaneda · Desde 1903</span>
+    </div>
+    <p class="footer__copy">&copy; {{ currentYear }} Racing Tickets. Todos los derechos reservados.</p>
+  </div>
+</footer>

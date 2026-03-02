@@ -1,0 +1,19 @@
+You are an Angular 17 expert. A developer made this request for a Racing Club ticket sales website:
+
+REQUEST: "{{user_request}}"
+
+EXISTING FILES IN THE PROJECT:
+{{existing_files}}
+
+Your job: identify which files need to be CREATED or MODIFIED to fulfill this request.
+
+OUTPUT RULES - read carefully:
+- Respond with ONE file path per line
+- Nothing else: no explanations, no markdown, no bullets, no numbers
+- Only include files directly needed for this request
+- Use paths relative to the Angular project root (e.g. src/app/features/partidos/partidos.component.ts)
+
+Example of a correct response:
+src/app/features/partidos/partidos.component.ts
+src/app/features/partidos/partidos.component.html
+src/app/features/partidos/partidos.component.scss

@@ -1,0 +1,124 @@
+<!-- ── HERO ──────────────────────────────────────────────────────────────── -->
+<section class="hero" *ngIf="partidoDestacado; else heroSkeleton">
+  <div class="hero__bg"></div>
+  <div class="container hero__content">
+
+    <div class="hero__badge animate-slide-up">
+      <span class="badge badge--few">{{ partidoDestacado.torneo }}</span>
+      <span class="hero__badge-label">Próximo partido</span>
+    </div>
+
+    <h1 class="hero__title animate-slide-up">
+      Racing Club
+      <span class="hero__vs">vs</span>
+      {{ partidoDestacado.rival }}
+    </h1>
+
+    <p class="hero__meta animate-slide-up">
+      📅 {{ partidoDestacado.fecha | date:'EEEE d \'de\' MMMM':'':'es' | titlecase }} &nbsp;·&nbsp;
+      🏟️ {{ partidoDestacado.estadio }}
+    </p>
+
+    <!-- Countdown -->
+    <div class="countdown animate-slide-up">
+      <div class="countdown__unit">
+        <span class="countdown__number">{{ pad(countdown.dias) }}</span>
+        <span class="countdown__label">Días</span>
+      </div>
+      <span class="countdown__sep">:</span>
+      <div class="countdown__unit">
+        <span class="countdown__number">{{ pad(countdown.horas) }}</span>
+        <span class="countdown__label">Horas</span>
+      </div>
+      <span class="countdown__sep">:</span>
+      <div class="countdown__unit">
+        <span class="countdown__number">{{ pad(countdown.minutos) }}</span>
+        <span class="countdown__label">Min</span>
+      </div>
+      <span class="countdown__sep">:</span>
+      <div class="countdown__unit">
+        <span class="countdown__number">{{ pad(countdown.segundos) }}</span>
+        <span class="countdown__label">Seg</span>
+      </div>
+    </div>
+
+    <div class="hero__actions animate-slide-up">
+      <a [routerLink]="['/compra', partidoDestacado.id]" class="btn btn--primary hero__btn">
+        Comprar Entradas — desde {{ getPrecioMinimo(partidoDestacado) | currency:'ARS':'symbol':'1.0-0' }}
+      </a>
+      <a routerLink="/partidos" class="btn btn--outline">Ver todos los partidos</a>
+    </div>
+
+  </div>
+</section>
+
+<ng-template #heroSkeleton>
+  <section class="hero hero--skeleton">
+    <div class="container"><div class="skeleton skeleton--hero"></div></div>
+  </section>
+</ng-template>
+
+<!-- ── PRÓXIMOS PARTIDOS ─────────────────────────────────────────────────── -->
+<section class="section proximos">
+  <div class="container">
+    <h2 class="section__title">Próximos Partidos</h2>
+
+    <div class="partidos-grid" *ngIf="!loading; else gridSkeleton">
+      <div class="partido-card animate-slide-up card"
+           *ngFor="let partido of proximosPartidos; trackBy: trackById">
+
+        <div class="partido-card__header">
+          <span class="badge" [class]="'badge--' + getDisponibilidad(partido.sectores[0])">
+            {{ getDisponibilidadLabel(getDisponibilidad(partido.sectores[0])) }}
+          </span>
+          <span class="partido-card__torneo">{{ partido.torneo }}</span>
+        </div>
+
+        <div class="partido-card__teams">
+          <span class="partido-card__team partido-card__team--home">Racing Club</span>
+          <span class="partido-card__vs">VS</span>
+          <span class="partido-card__team">{{ partido.rival }}</span>
+        </div>
+
+        <div class="partido-card__info">
+          <span>📅 {{ partido.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>🏟️ {{ partido.estadio }}</span>
+        </div>
+
+        <div class="partido-card__footer">
+          <span class="partido-card__precio">
+            Desde {{ getPrecioMinimo(partido) | currency:'ARS':'symbol':'1.0-0' }}
+          </span>
+          <a [routerLink]="['/compra', partido.id]" class="btn btn--primary partido-card__btn">
+            Comprar
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #gridSkeleton>
+      <div class="partidos-grid">
+        <div class="skeleton skeleton--card" *ngFor="let i of [1,2,3,4]"></div>
+      </div>
+    </ng-template>
+
+    <div class="section__cta">
+      <a routerLink="/partidos" class="btn btn--outline">Ver calendario completo →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── WHY EL CILINDRO ───────────────────────────────────────────────────── -->
+<section class="section why">
+  <div class="container">
+    <h2 class="section__title">La Experiencia del Cilindro</h2>
+    <div class="why__grid">
+      <div class="why__item" *ngFor="let item of whyItems">
+        <span class="why__icon">{{ item.icon }}</span>
+        <h3 class="why__title">{{ item.title }}</h3>
+        <p class="why__desc">{{ item.desc }}</p>
+      </div>
+    </div>
+  </div>
+</section>
