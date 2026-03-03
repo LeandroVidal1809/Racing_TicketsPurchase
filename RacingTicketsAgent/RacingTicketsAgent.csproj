@@ -28,6 +28,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="frontend-output\src\app\features\partidos\" />
     <Folder Include="Tools\" />
     <Folder Include="Skills\" />
   </ItemGroup>

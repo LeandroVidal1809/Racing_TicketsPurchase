@@ -1,19 +1,41 @@
-You are an Angular 17 expert. A developer made this request for a Racing Club ticket sales website:
+﻿!!!CRITICAL INSTRUCTION!!!
+Respond with file paths ONLY. Nothing else.
+No explanations. No sentences. No markdown. No bullets. No numbers.
+Just file paths, one per line.
 
-REQUEST: "{{user_request}}"
+═══════════════════════════════════════════════════════════════════
+DEVELOPER REQUEST: "{{user_request}}"
 
-EXISTING FILES IN THE PROJECT:
+EXISTING PROJECT FILES:
 {{existing_files}}
+═══════════════════════════════════════════════════════════════════
 
-Your job: identify which files need to be CREATED or MODIFIED to fulfill this request.
+Your job: identify which files must be CREATED or MODIFIED to fulfill the request.
+- If the request changes something visual → include the .html AND .scss of that component
+- If the request changes logic or adds properties → include the .ts of that component
+- If the request creates a new component → include the .ts, .html and .scss
+- If the request is about global styles → include src/styles.scss
 
-OUTPUT RULES - read carefully:
-- Respond with ONE file path per line
-- Nothing else: no explanations, no markdown, no bullets, no numbers
-- Only include files directly needed for this request
-- Use paths relative to the Angular project root (e.g. src/app/features/partidos/partidos.component.ts)
+CORRECT output examples:
 
-Example of a correct response:
+Example 1 - "Change the button color in home component":
+src/app/features/home/home.component.html
+src/app/features/home/home.component.scss
+
+Example 2 - "Add a search filter to partidos":
 src/app/features/partidos/partidos.component.ts
 src/app/features/partidos/partidos.component.html
 src/app/features/partidos/partidos.component.scss
+
+Example 3 - "Create the purchase page":
+src/app/features/compra/compra.component.ts
+src/app/features/compra/compra.component.html
+src/app/features/compra/compra.component.scss
+
+WRONG output (NEVER do this):
+"Here are the files you need to modify..."
+"Based on your request, I suggest..."
+"1) src/app/..."
+"- src/app/..."
+
+Output the file paths now, one per line, nothing else:

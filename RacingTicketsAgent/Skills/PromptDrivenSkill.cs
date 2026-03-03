@@ -85,7 +85,7 @@ public class PromptDrivenSkill
     // ── PRIVATE ───────────────────────────────────────────────────────────────
 
     private async Task<List<string>> IdentifyFilesAsync(
-        string userRequest, List<string> existing, CancellationToken ct)
+    string userRequest, List<string> existing, CancellationToken ct)
     {
         var prompt = _loader.Load("identify_files", new()
         {
@@ -103,14 +103,24 @@ public class PromptDrivenSkill
                 response = await _ollama.ChatAsync(prompt, ct);
             });
 
-        AnsiConsole.MarkupLine($"[dim]Respuesta Ollama (identify):[/]");
-        AnsiConsole.MarkupLine($"[dim]{response.Trim()[..Math.Min(400, response.Trim().Length)]}[/]\n");
+        var validExtensions = new HashSet<string> { ".ts", ".html", ".scss", ".css", ".json" };
 
         return response
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            // Limpiar backticks y bullets
             .Select(l => l.Trim().TrimStart('-', '*', '•', '`', ' '))
-            .Where(l => l.Contains('/') && l.Contains('.'))
-            .Where(l => !l.StartsWith("//") && !l.StartsWith("#"))
+            // Sacar comentarios después de # o //
+            .Select(l => l.Contains('#') ? l[..l.IndexOf('#')].Trim() : l)
+            .Select(l => l.Contains("//") ? l[..l.IndexOf("//")].Trim() : l)
+            // Limpiar espacios dentro del path (src/app/ features → src/app/features)
+            .Select(l => l.Replace(" ", "").Replace("\\", "/"))
+            // Solo líneas que empiecen con src/
+            .Where(l => l.StartsWith("src/"))
+            // Extensión válida
+            .Where(l => validExtensions.Contains(
+                Path.GetExtension(l).ToLower()))
+            // Al menos 2 niveles de carpeta
+            .Where(l => l.Count(c => c == '/') >= 2)
             .Distinct()
             .ToList();
     }

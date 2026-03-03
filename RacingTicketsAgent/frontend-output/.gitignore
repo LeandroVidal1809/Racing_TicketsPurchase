@@ -1,0 +1,16 @@
+# Secrets
+appsettings.json
+appsettings.*.json
+
+# Angular
+node_modules/
+dist/
+.angular/
+
+# Build
+bin/
+obj/
+
+# OS
+.DS_Store
+Thumbs.db
