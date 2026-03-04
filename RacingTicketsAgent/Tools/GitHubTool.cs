@@ -1,12 +1,10 @@
 using LibGit2Sharp;
-using LibGit2Sharp.Handlers;
 using Microsoft.Extensions.Configuration;
 using Octokit;
 using Repository = LibGit2Sharp.Repository;
 using Signature = LibGit2Sharp.Signature;
-using Credentials = LibGit2Sharp.Credentials;
 
-namespace RacingTicketsAgent.Tools;
+namespace RacingAgentClaude.Tools;
 
 public class GitTool
 {
@@ -25,9 +23,51 @@ public class GitTool
         _localPath = localPath;
     }
 
-    public async Task<string> EnsureRepoExistsAsync(CancellationToken ct = default)
+    public async Task<string> CommitAndPushAsync(string message, CancellationToken ct = default)
     {
-        var github = new GitHubClient(new ProductHeaderValue("RacingTicketsAgent"))
+        try
+        {
+            var remoteUrl = await EnsureRemoteRepoAsync(ct);
+
+            if (!Repository.IsValid(_localPath))
+                Repository.Init(_localPath);
+
+            using var repo = new Repository(_localPath);
+
+            EnsureGitIgnore();
+
+            if (repo.Network.Remotes["origin"] == null)
+                repo.Network.Remotes.Add("origin", remoteUrl);
+            else
+                repo.Network.Remotes.Update("origin", r => r.Url = remoteUrl);
+
+            Commands.Stage(repo, "*");
+
+            var status = repo.RetrieveStatus();
+            if (!status.IsDirty)
+                return "Nothing to commit — no changes detected.";
+
+            var sig = new Signature(_username, $"{_username}@racing-agent.local", DateTimeOffset.Now);
+            repo.Commit(message, sig, sig);
+
+            var options = new PushOptions
+            {
+                CredentialsProvider = (_, _, _) =>
+                    new UsernamePasswordCredentials { Username = _token, Password = string.Empty }
+            };
+            repo.Network.Push(repo.Head, options);
+
+            return $"✓ Committed and pushed: \"{message}\"";
+        }
+        catch (Exception ex)
+        {
+            return $"Git error: {ex.Message}";
+        }
+    }
+
+    private async Task<string> EnsureRemoteRepoAsync(CancellationToken ct)
+    {
+        var github = new GitHubClient(new ProductHeaderValue("RacingAgentClaude"))
         {
             Credentials = new Octokit.Credentials(_token)
         };
@@ -49,76 +89,12 @@ public class GitTool
         }
     }
 
-    public async Task<string> CommitAndPushAsync(string message, CancellationToken ct = default)
-    {
-        try
-        {
-            var remoteUrl = await EnsureRepoExistsAsync(ct);
-
-            // Init if needed
-            if (!Repository.IsValid(_localPath))
-                Repository.Init(_localPath);
-
-            using var repo = new Repository(_localPath);
-
-            // Write .gitignore if missing
-            EnsureGitIgnore();
-
-            // Set remote
-            if (repo.Network.Remotes["origin"] == null)
-                repo.Network.Remotes.Add("origin", remoteUrl);
-            else
-                repo.Network.Remotes.Update("origin", r => r.Url = remoteUrl);
-
-            // Stage all
-            Commands.Stage(repo, "*");
-
-            var status = repo.RetrieveStatus();
-            if (!status.IsDirty)
-                return "Nothing to commit — no changes detected.";
-
-            // Commit
-            var sig = new Signature(_username, $"{_username}@racing-agent.local", DateTimeOffset.Now);
-            repo.Commit(message, sig, sig);
-
-            // Push
-            var options = new PushOptions
-            {
-                CredentialsProvider = (_, _, _) =>
-                    new UsernamePasswordCredentials { Username = _token, Password = string.Empty }
-            };
-            repo.Network.Push(repo.Head, options);
-
-            return $"✓ Committed and pushed: \"{message}\"";
-        }
-        catch (Exception ex)
-        {
-            return $"Git error: {ex.Message}";
-        }
-    }
-
     private void EnsureGitIgnore()
     {
         var path = Path.Combine(_localPath, ".gitignore");
         if (File.Exists(path)) return;
 
-        File.WriteAllText(path, """
-            # Secrets
-            appsettings.json
-            appsettings.*.json
-
-            # Angular
-            node_modules/
-            dist/
-            .angular/
-
-            # Build
-            bin/
-            obj/
-
-            # OS
-            .DS_Store
-            Thumbs.db
-            """);
+        File.WriteAllText(path,
+            "appsettings.json\nappsettings.*.json\nnode_modules/\ndist/\n.angular/\nbin/\nobj/\n.DS_Store\n");
     }
 }

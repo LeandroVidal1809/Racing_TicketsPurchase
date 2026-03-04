@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace RacingTicketsAgent.Tools;
+namespace RacingAgentClaude.Tools;
 
 public class FileSystemTool
 {
@@ -30,22 +30,6 @@ public class FileSystemTool
                 .OrderBy(f => f)
             : [];
 
-    public string ReadAllFiles()
-    {
-        var files = ListFiles().ToList();
-        if (files.Count == 0) return "(project is empty)";
-
-        var sb = new System.Text.StringBuilder();
-        foreach (var rel in files)
-        {
-            var full = Path.Combine(_outputPath, rel);
-            sb.AppendLine($"=== {rel} ===");
-            sb.AppendLine(File.ReadAllText(full));
-            sb.AppendLine();
-        }
-        return sb.ToString();
-    }
-
     public void WriteFile(string relativePath, string content)
     {
         relativePath = relativePath.Replace('/', Path.DirectorySeparatorChar);
@@ -61,5 +45,5 @@ public class FileSystemTool
     private bool IsIgnored(string path) =>
         IgnoredFolders.Any(f =>
             path.Contains($"{Path.DirectorySeparatorChar}{f}{Path.DirectorySeparatorChar}") ||
-            path.Contains($"{Path.DirectorySeparatorChar}{f}"));
+            path.EndsWith($"{Path.DirectorySeparatorChar}{f}"));
 }

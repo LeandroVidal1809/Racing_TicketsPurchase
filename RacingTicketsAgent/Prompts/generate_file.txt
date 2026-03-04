@@ -1,153 +1,65 @@
-﻿!!!CRITICAL INSTRUCTION - READ BEFORE ANYTHING ELSE!!!
-You will output RAW FILE CONTENT ONLY.
-No introductions. No explanations. No summaries. No apologies.
-No markdown. No code fences. No backticks. No ```.
-The very first character of your response must be the first character of the file.
-If you write even one word before the file content, you have failed.
+﻿You are an Angular 17 expert. Write the complete content of this file for a ticket sales website for Racing Club de Avellaneda.
 
-═══════════════════════════════════════════════════════════════════
-FILE TO WRITE: {{file_path}}
-FILE TYPE:     {{file_type}}
-REQUEST:       {{user_request}}
-═══════════════════════════════════════════════════════════════════
+FILE: {{file_path}}
+TYPE: {{file_type}}
+REQUEST: {{user_request}}
 
-CORRECT output example for a .ts file (notice: starts immediately, no intro):
-import { Component, OnInit } from '@angular/core';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { PartidosService } from '../../core/services/partidos.service';
-import { Partido, getPrecioMinimo, getDisponibilidad, getDisponibilidadLabel } from '../../core/models/partido.model';
+PROJECT DESIGN SYSTEM:
+CSS variables (always use var(), never hardcode hex):
+  --color-primary: #1565C0  --color-accent: #00B0FF  --color-danger: #D32F2F
+  --bg-base: #0D1B2A  --bg-surface: #112236  --bg-glass: rgba(21,44,68,0.7)
+  --text-primary: #E8F0FE  --text-secondary: #90A4C8
+  --font-display: 'Barlow Condensed'  --font-body: 'Barlow'
+  --space-sm: 8px  --space-md: 16px  --space-lg: 24px  --space-xl: 40px  --space-2xl: 64px
+  --radius-sm: 6px  --radius-md: 12px  --shadow-card: 0 4px 24px rgba(0,0,0,0.4)
 
-@Component({
-  selector: 'app-example',
-  standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyPipe, DatePipe],
-  templateUrl: './example.component.html',
-  styleUrls: ['./example.component.scss']
-})
-export class ExampleComponent implements OnInit {
-  items: Partido[] = [];
-  loading = true;
+Reusable CSS classes already defined in styles.scss:
+  .container .btn.btn--primary .btn--outline .btn--danger
+  .card .section .section__title
+  .badge.badge--available .badge--few .badge--soldout
+  .animate-slide-up
 
-  constructor(private svc: PartidosService) {}
-
-  ngOnInit(): void {
-    this.svc.getPartidos().subscribe(data => {
-      this.items = data;
-      this.loading = false;
-    });
-  }
-
-  trackById(_: number, p: Partido): string { return p.id; }
-}
-
-CORRECT output example for a .html file (notice: starts immediately, no intro):
-<section class="section">
-  <div class="container">
-    <h2 class="section__title">Lista de Partidos</h2>
-    <div class="partidos-grid" *ngIf="!loading; else skeletonTpl">
-      <div class="card partido-card animate-slide-up"
-           *ngFor="let partido of items; trackBy: trackById">
-        <span class="badge badge--available">{{ partido.torneo }}</span>
-        <h3 class="partido-card__rival">{{ partido.rival }}</h3>
-        <a [routerLink]="['/compra', partido.id]" class="btn btn--primary">Comprar</a>
-      </div>
-    </div>
-    <ng-template #skeletonTpl>
-      <p class="loading-text">Cargando...</p>
-    </ng-template>
-  </div>
-</section>
-
-CORRECT output example for a .scss file (notice: starts immediately, no intro):
-.section {
-  padding: var(--space-2xl) 0;
-}
-
-.partidos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-lg);
-}
-
-.partido-card {
-  padding: var(--space-lg);
-
-  &__rival {
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    text-transform: uppercase;
-  }
-
-  @media (max-width: 768px) {
-    padding: var(--space-md);
-  }
-}
-
-═══════════════════════════════════════════════════════════════════
-WRONG output (NEVER do this):
-"Here is the component for your Racing Club project..."
-"Sure! Below is the TypeScript file..."
-"I'll create the partidos component as requested..."
-"```typescript"
-═══════════════════════════════════════════════════════════════════
-
-PROJECT CONTEXT - Angular 17 Racing Club de Avellaneda:
-
-COLORS (always use var(), never hardcode hex values):
-  --color-primary:  #1565C0
-  --color-accent:   #00B0FF
-  --color-danger:   #D32F2F
-  --bg-base:        #0D1B2A
-  --bg-surface:     #112236
-  --bg-glass:       rgba(21,44,68,0.7)
-  --text-primary:   #E8F0FE
-  --text-secondary: #90A4C8
-  --font-display:   'Barlow Condensed'
-  --font-body:      'Barlow'
-
-SPACING: --space-sm: 8px | --space-md: 16px | --space-lg: 24px | --space-xl: 40px | --space-2xl: 64px
-
-REUSABLE CSS CLASSES (defined in styles.scss):
-  .container .btn.btn--primary .btn--outline .card .section .section__title
-  .badge .badge--available .badge--few .badge--soldout .animate-slide-up
-
-AVAILABLE SERVICE:
-  import { PartidosService } from '../../core/services/partidos.service'
+Available service — PartidosService (import from ../../core/services/partidos.service):
   getPartidos(): Observable<Partido[]>
   getPartidoById(id: string): Observable<Partido | undefined>
   comprarTicket(orden: OrdenCompra): Observable<Ticket>
   getMisTickets(): Observable<Ticket[]>
 
-AVAILABLE MODELS AND HELPERS:
-  import { Partido, Sector, Ticket, OrdenCompra, getPrecioMinimo, getDisponibilidad, getDisponibilidadLabel } from '../../core/models/partido.model'
+Available models (import from ../../core/models/partido.model):
+  Partido, Sector, Ticket, OrdenCompra
+  getPrecioMinimo(partido): number
+  getDisponibilidad(sector): 'available' | 'few' | 'soldout'
+  getDisponibilidadLabel(estado): string
 
-RULES FOR .ts FILES:
-  standalone: true | imports: [CommonModule] always | RouterLink if template uses routerLink
-  CurrencyPipe + DatePipe if template uses currency or date pipes
-  Declare EVERY property and method used in the template
-  Use OnInit for data loading | Never leave unimplemented methods
-
-RULES FOR .html FILES:
-  Use *ngIf and *ngFor — NEVER @if or @for
-  Every *ngFor must have trackBy
-  Show loading skeleton and empty state
-  Only reference properties that exist in the .ts file
-  Use project CSS classes only — never inline styles
-
-RULES FOR .scss FILES:
-  BEM naming: .block__element--modifier
-  Always var(--name) — never hardcode hex colors
-  Mobile-first: base styles then @media (max-width: 768px)
-  Add transition on all hover states
-
-EXISTING PROJECT FILES:
+Existing project files (for import paths):
 {{existing_files}}
 
-!!!FINAL REMINDER - THIS IS NON NEGOTIABLE!!!
-Your response must start with the first line of code.
-Not with a sentence. Not with a comment. Not with a backtick.
-The first character you output must be the first character of the file content.
-Write the file now:
+RULES BY FILE TYPE:
+
+For .ts files:
+  - standalone: true
+  - imports array must include CommonModule always
+  - imports array must include RouterLink if template uses routerLink or routerLinkActive
+  - imports array must include CurrencyPipe and/or DatePipe if template uses them
+  - Every property used in the template must be declared in the class
+  - Every method called from the template must exist in the class
+  - Use ngOnInit() to load data from services
+
+For .html files:
+  - Use *ngIf and *ngFor (never @if or @for)
+  - Every *ngFor must have trackBy
+  - Always show a loading state and an empty state
+  - Only reference properties and methods that exist in the .ts file
+  - Never use inline styles, only CSS classes
+
+For .scss files:
+  - BEM methodology: .block__element--modifier
+  - Always use var(--variable-name) for colors, fonts and spacing
+  - Write mobile styles inside @media (max-width: 768px)
+  - Add transition: all 0.25s ease on interactive elements
+
+OUTPUT RULES — critical:
+  - Output the raw file content only
+  - Do not add any explanation before or after
+  - Do not use markdown code fences or backticks
+  - The first character of your response must be the first character of the file

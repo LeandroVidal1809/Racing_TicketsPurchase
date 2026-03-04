@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, delay } from 'rxjs';
-import { Partido, Ticket, OrdenCompra } from '../models/partido.model';
+import { Partido } from '../models/partido.model';
 import { Ticket as TicketModel } from '../models/ticket.model';
 
 @Injectable({ providedIn: 'root' })
@@ -81,30 +81,6 @@ export class PartidosService {
 
   getProximosPartidos(limit = 3): Observable<Partido[]> {
     return of(this.mockPartidos.slice(0, limit)).pipe(delay(300));
-  }
-
-  comprarTicket(orden: OrdenCompra): Observable<TicketModel> {
-    const partido = this.mockPartidos.find(p => p.id === orden.partidoId)!;
-    const sector  = partido.sectores.find(s => s.id === orden.sectorId)!;
-
-    const ticket: TicketModel = {
-      id:              `TKT-${Date.now()}`,
-      partidoId:       orden.partidoId,
-      sectorId:        orden.sectorId,
-      sectorNombre:    sector.nombre,
-      partidoRival:    partido.rival,
-      partidoFecha:    partido.fecha,
-      compradorNombre: orden.compradorNombre,
-      compradorDni:    orden.compradorDni,
-      compradorEmail:  orden.compradorEmail,
-      precio:          sector.precio * orden.cantidad,
-      fechaCompra:     new Date(),
-      qrCode:          `QR-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-      estado:          'confirmado'
-    };
-
-    this.mockTickets.push(ticket);
-    return of(ticket).pipe(delay(800));
   }
 
   getMisTickets(): Observable<TicketModel[]> {

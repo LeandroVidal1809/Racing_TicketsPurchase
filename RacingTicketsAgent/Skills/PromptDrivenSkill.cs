@@ -1,23 +1,20 @@
-﻿using RacingTicketsAgent.Agent;
-using RacingTicketsAgent.Tools;
+﻿using RacingAgentClaude.Agent;
+using RacingAgentClaude.Tools;
+using RacingTicketsAgent.Agent;
 using Spectre.Console;
 
-namespace RacingTicketsAgent.Skills;
+namespace RacingAgentClaude.Skills;
 
 public class PromptDrivenSkill
 {
-    private readonly OllamaClient _ollama;
+    private readonly ILlmClient _llm;
     private readonly PromptLoader _loader;
     private readonly FileSystemTool _fs;
     private readonly GitTool _git;
 
-    public PromptDrivenSkill(
-        OllamaClient ollama,
-        PromptLoader loader,
-        FileSystemTool fs,
-        GitTool git)
+    public PromptDrivenSkill(ILlmClient llm, PromptLoader loader, FileSystemTool fs, GitTool git)
     {
-        _ollama = ollama;
+        _llm = llm;
         _loader = loader;
         _fs = fs;
         _git = git;
@@ -30,14 +27,12 @@ public class PromptDrivenSkill
 
         var existingFiles = _fs.ListFiles().ToList();
 
-        // ── STEP 1: identify which files to create/modify ─────────────────
+        // ── STEP 1: identify files ────────────────────────────────────────
         var targetFiles = await IdentifyFilesAsync(userRequest, existingFiles, ct);
 
         if (targetFiles.Count == 0)
         {
             AnsiConsole.MarkupLine("[red]No se identificaron archivos para este pedido.[/]");
-            AnsiConsole.MarkupLine("[dim]Intentá ser más específico, por ejemplo:[/]");
-            AnsiConsole.MarkupLine("[dim]  'Creá la página de lista de partidos con filtros por torneo'[/]");
             return;
         }
 
@@ -47,16 +42,14 @@ public class PromptDrivenSkill
 
         // ── STEP 2: generate each file ────────────────────────────────────
         var generated = new List<string>();
-
         foreach (var filePath in targetFiles)
         {
             if (ct.IsCancellationRequested) break;
-
             var ok = await GenerateFileAsync(filePath, userRequest, existingFiles, ct);
             if (ok)
             {
                 generated.Add(filePath);
-                existingFiles.Add(filePath); // enrich context for next file
+                existingFiles.Add(filePath);
             }
         }
 
@@ -79,67 +72,56 @@ public class PromptDrivenSkill
             });
 
         AnsiConsole.MarkupLine($"[green]{gitResult}[/]");
-        AnsiConsole.MarkupLine($"\n[bold green]✓ Listo. {generated.Count} archivo(s) generado(s) y pusheado(s).[/]");
+        AnsiConsole.MarkupLine($"\n[bold green]✓ {generated.Count} archivo(s) generado(s) y pusheado(s).[/]");
     }
 
-    // ── PRIVATE ───────────────────────────────────────────────────────────────
-
     private async Task<List<string>> IdentifyFilesAsync(
-    string userRequest, List<string> existing, CancellationToken ct)
+        string userRequest, List<string> existing, CancellationToken ct)
     {
         var prompt = _loader.Load("identify_files", new()
         {
             ["user_request"] = userRequest,
-            ["existing_files"] = existing.Count > 0
-                ? string.Join("\n", existing)
-                : "(none)"
+            ["existing_files"] = existing.Count > 0 ? string.Join("\n", existing) : "(none)"
         });
 
         string response = string.Empty;
-        await AnsiConsole.Status()
-            .Spinner(Spinner.Known.Dots)
+        await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
             .StartAsync("[cyan]Identificando archivos...[/]", async _ =>
             {
-                response = await _ollama.ChatAsync(prompt, ct);
+                response = await _llm.ChatAsync(prompt, ct);
             });
+
+        AnsiConsole.MarkupLine($"[dim]Claude identify → {response.Trim()[..Math.Min(200, response.Trim().Length)]}[/]\n");
 
         var validExtensions = new HashSet<string> { ".ts", ".html", ".scss", ".css", ".json" };
 
         return response
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            // Limpiar backticks y bullets
-            .Select(l => l.Trim().TrimStart('-', '*', '•', '`', ' '))
-            // Sacar comentarios después de # o //
+            .Select(l => l.Trim())
+            .Select(l => System.Text.RegularExpressions.Regex.Replace(l, @"^[\-\*\•\`\d\.\s]+", ""))
             .Select(l => l.Contains('#') ? l[..l.IndexOf('#')].Trim() : l)
             .Select(l => l.Contains("//") ? l[..l.IndexOf("//")].Trim() : l)
-            // Limpiar espacios dentro del path (src/app/ features → src/app/features)
-            .Select(l => l.Replace(" ", "").Replace("\\", "/"))
-            // Solo líneas que empiecen con src/
+            .Select(l => l.Replace('\\', '/').Trim())
             .Where(l => l.StartsWith("src/"))
-            // Extensión válida
-            .Where(l => validExtensions.Contains(
-                Path.GetExtension(l).ToLower()))
-            // Al menos 2 niveles de carpeta
-            .Where(l => l.Count(c => c == '/') >= 2)
+            .Where(l => validExtensions.Contains(Path.GetExtension(l).ToLower()))
+            .Where(l => !l.Contains(' '))
             .Distinct()
             .ToList();
     }
 
     private async Task<bool> GenerateFileAsync(
-        string filePath,
-        string userRequest,
-        List<string> existingFiles,
-        CancellationToken ct)
+        string filePath, string userRequest,
+        List<string> existingFiles, CancellationToken ct)
     {
         AnsiConsole.MarkupLine($"\n[bold yellow]Generando:[/] {filePath}");
 
         var ext = Path.GetExtension(filePath).ToLower();
         var fileType = ext switch
         {
-            ".ts" => "TypeScript Angular 17 standalone component (.ts)",
-            ".html" => "Angular HTML template (.html)",
-            ".scss" => "SCSS stylesheet (.scss)",
-            ".json" => "JSON file (.json)",
+            ".ts" => "TypeScript Angular 17 standalone component",
+            ".html" => "Angular HTML template",
+            ".scss" => "SCSS stylesheet",
+            ".json" => "JSON file",
             _ => $"{ext} file"
         };
 
@@ -152,19 +134,17 @@ public class PromptDrivenSkill
         });
 
         string content = string.Empty;
-        await AnsiConsole.Status()
-            .Spinner(Spinner.Known.Dots)
-            .StartAsync($"[cyan]Escribiendo {Path.GetFileName(filePath)}...[/]", async _ =>
+        await AnsiConsole.Status().Spinner(Spinner.Known.Dots)
+            .StartAsync($"[cyan]  Escribiendo {Path.GetFileName(filePath)}...[/]", async _ =>
             {
-                content = await _ollama.ChatAsync(prompt, ct);
+                content = await _llm.ChatAsync(prompt, ct);
             });
 
-        // Strip markdown fences if model adds them
         content = StripCodeFences(content);
 
         if (string.IsNullOrWhiteSpace(content))
         {
-            AnsiConsole.MarkupLine($"[red]  SKIP: respuesta vacía[/]");
+            AnsiConsole.MarkupLine("[red]  SKIP: respuesta vacía[/]");
             return false;
         }
 
@@ -176,13 +156,10 @@ public class PromptDrivenSkill
     private static string StripCodeFences(string content)
     {
         var lines = content.Split('\n').ToList();
-
         if (lines.Count > 0 && lines[0].TrimStart().StartsWith("```"))
             lines.RemoveAt(0);
-
         if (lines.Count > 0 && lines[^1].Trim().StartsWith("```"))
             lines.RemoveAt(lines.Count - 1);
-
         return string.Join('\n', lines).Trim();
     }
 }
